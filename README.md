@@ -35,9 +35,9 @@ Uso de IA generativa para criação e otimização dos scrips dos gráficos gera
 
 ## 🗺️ Resultados Visuais
 ![Grupos sucessionais](boxplot_grupo_sucessional.png)
+*Figura 1: Gráfico do tipo boxplot da distribuição do DAP por grupo sucessional.*
 
-
-*Figura 1: .*
-
+![Modo de dispersão](dispersão.png)
+*Figura 1: Gráfico do tipo boxplot da distribuição do DAP por grupo sucessional.*
 
 
