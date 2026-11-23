@@ -1,4 +1,4 @@
-# Análise de dado com R na Restauração Ecológica
+# Análise de dados com R na Restauração Ecológica
 
 ## Introdução / Contexto
 Buscar colocar em prática o conhecimento básico aprendido no curso de análise de dados do Google "Análise de dados com programação R" na área de Restauração Ecológica.
