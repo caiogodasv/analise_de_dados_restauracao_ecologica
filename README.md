@@ -34,7 +34,7 @@ Uso de IA generativa para criação e otimização dos scrips dos gráficos gera
 * **Fontes de dados:** dados de campo simulados/sintéticos por IA.
 
 ## 🗺️ Resultados Visuais
-![Grupos sucessionais]()
+![Grupos sucessionais](boxplot_grupo_sucessional.png)
 
 
 *Figura 1: .*
