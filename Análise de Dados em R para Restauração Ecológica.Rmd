@@ -1,0 +1,160 @@
+---
+title: "Análise de Dados em R para Restauração Ecológica"
+author: "Caio"
+date: "2025-05-30"
+output: html_document
+---
+
+# 1. Instalar e carregar os pacotes
+
+```{r}
+library("tidyverse")
+library("readxl")
+library("vegan")
+```
+
+# 2. Importar os dados do Excel
+
+```{r}
+dados <- read_excel("dados_restauracao_ecologica.xlsx")
+```
+
+# 3. Explorar os dados
+
+* Mostra as primeiras linhas:
+```{r}
+head(dados)
+```
+
+* Ver a estrutura das colunas:
+```{r}
+glimpse(dados)
+```
+
+## Número de parcelas e espécies únicas
+
+```{r}
+dados %>%
+  summarise(
+    n_parcelas = n_distinct(Parcela),
+    n_especies = n_distinct(Especie)
+  )
+```
+
+Obs.: n_distinct() conta caracteres únicas de uma coluna.
+
+# 4. Calcular a riqueza de espécies por parcela
+
+```{r}
+riqueza <- dados %>% 
+  group_by(Parcela) %>% 
+  summarise(Riqueza = n_distinct(Especie))
+print(riqueza)
+```
+
+# 5. Calcular índice de Shannon por parcela
+
+## Abundância de espécies por parcela
+
+```{r}
+comunidade <- dados %>% 
+  group_by(Parcela, Especie) %>% 
+  summarise(Abundancia = sum(N_Individuos), .groups = "drop") %>% 
+  pivot_wider(names_from = Especie, values_from = Abundancia, values_fill = 0)
+```
+
+* .groups =  "drops" - remove grupos após o cálculo.
+
+## Tranformar em matriz (nomeando as linhas(Parcela))
+
+```{r}
+matriz <- as.data.frame(comunidade[,-1])
+rownames(matriz) <- comunidade$Parcela
+```
+
+## Calcular índice de Shannon
+
+Para calcular o índice de Shannon, é necessário fazer um matriz que relacione a abundância das espécies por parcela - o que foi feito na etapa anterior.
+
+```{r}
+shannon <- diversity(matriz, index = "shannon")
+```
+
+## Adicionar à tabela de riqueza
+
+```{r}
+riqueza$Shannon <- shannon[riqueza$Parcela]
+```
+
+# 6. Gráfico: riqueza e Shannon por parcela
+
+```{r}
+ggplot(riqueza, aes(x = Parcela)) +
+  geom_col(aes(y = Riqueza), fill = "darkgreen") +
+  geom_line(aes(y = Shannon * 10, group = 1), color = "blue", linewidth = 1.2) +
+  scale_y_continuous(
+    name = "Riqueza",
+    sec.axis = sec_axis(transform = ~./10, name = "Índice de Shannon")
+  ) +
+  theme_minimal() +
+  labs(title = "Riqueza e Diversidade (Shannon) por Parcela")
+```
+
+# 7. Regressão: diversidade x variáveis ambientais
+
+## Juntar as variáveis ambientais com riqueza e Shannon
+
+```{r}
+analise <- riqueza %>%
+  left_join(dados %>% distinct(Parcela, Cobertura_Arborea, Umidade, pH, Presenca_Fauna), by = "Parcela")
+```
+
+
+distinct() retorna valores únicos da coluna.
+
+## Rodar Regressão Linear
+
+```{r}
+modelo <- lm(Riqueza ~ Cobertura_Arborea + Umidade + pH + Presenca_Fauna, data = analise)
+```
+
+```{r}
+modelo_2 <- lm(Riqueza ~ Cobertura_Arborea, data = analise)
+summary(modelo)
+
+```
+
+
+## Ver resultado
+
+```{r}
+summary(modelo)
+```
+
+# 8. Boxplot: DAP por grupo sucessional
+
+```{r}
+ggplot(dados, aes(x = Grupo_Sucessional, y = DAP_cm, fill = Grupo_Sucessional)) +
+  geom_boxplot() +
+  theme_minimal() +
+  labs(title = "Distribuiçao do DAP por Grupo Sucessional", x = NULL, y = "DAP (cm)")
+```
+# 9. Abundância por modo de dispersão
+
+```{r}
+dados %>% 
+  group_by(Modo_Dispersao) %>% 
+  summarise(Total_Individuos = sum(N_Individuos)) %>% ggplot(aes(x = reorder(Modo_Dispersao, -Total_Individuos), y = Total_Individuos, fill = Modo_Dispersao)) + 
+  geom_col() +
+  theme_minimal() +
+  labs(title = "Total de Indivíduos por Modo de Dispersão", x = NULL, y = "Total de Indivíduos")
+```
+
+# 10. Salvar gráficos
+
+
+```{r}
+ggsave("modo_de_dispersão.png", width = 8, height = 5)
+```
+
+  
